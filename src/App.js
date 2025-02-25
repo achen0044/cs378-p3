@@ -1,4 +1,5 @@
 import './App.css';
+import React, {useState} from 'react';
 import MenuItem from './components/MenuItem';
 import storeLogo from "./logo.png"
 
@@ -81,9 +82,37 @@ const menuItems = [
 
 
 function App() {
+
+    const [cart, setCart] = useState(Array(10).fill(0));
+    const updateCart = (idx, delta) => {
+        setCart(prevCart => {
+            const newCart = [...prevCart];
+            newCart[idx - 1] = Math.max(0, newCart[idx - 1] + delta); //cannot go below 0!!
+            return newCart;
+        });
+        // console.log(cart);
+    }
+    const clearCart = () => {
+        setCart(Array(10).fill(0));
+    }
+    const placeOrder = () => {
+
+        let orderList = menuItems
+            .map((item, index) =>
+                cart[index] > 0 ? `${item.title} x${cart[index]}` : null
+            )
+            .filter(item => item !== null); //OMEGA SCUFFED!!!
+
+        orderList = orderList.length === 0 ? "No items in cart"
+                            : "Order placed!\n\n" + orderList.join('\n');
+
+        window.alert(`${orderList}`);
+        clearCart();
+    }
+
     return (
     <div>
-        <div className="menu">
+        <div className="menu" style={{paddingBottom:"50px"}}>
             <br /><br />
             <div><img src={storeLogo} style={{width: "50%", display: "block", margin: "0 auto"}}/></div>
             <div style={{fontSize: "1.5em", fontFamily: 'Brush Script MT', color: "#e59c71"}}>
@@ -93,8 +122,19 @@ function App() {
             <br /><br />
 
             {menuItems.map((entry) => (
-                <MenuItem object={entry} />
+                <MenuItem object={entry}
+                    count={cart[entry.id-1]}
+                    addItem={() => updateCart(entry.id, +1)}
+                    removeItem={() => updateCart(entry.id, -1)} />
             ))}
+        </div>
+
+        <div className="cart-overlay" style={{height: "50px"}}>
+            {/* {cart} */}
+            {menuItems.reduce((count, item, idx) =>
+                count + item.price * cart[idx],0).toFixed(2)}
+            <button className="cart-button" onClick={placeOrder}>Order</button>
+            <button className="cart-button" onClick={clearCart}>Clear All</button>
         </div>
         
     </div>
